@@ -3,8 +3,8 @@ local character = game.Players.LocalPlayer.Character or game.Players.LocalPlayer
 local humanoid = character:WaitForChild("Humanoid")
 
 if humanoid.RigType == Enum.HumanoidRigType.R6 then
-    loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/TheSilentBunnyz/Script-Backups/refs/heads/main/r6%20jerk%20off.lua"))()
 elseif humanoid.RigType == Enum.HumanoidRigType.R15 then
-    loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/TheSilentBunnyz/Script-Backups/refs/heads/main/r15%20jerk%20off.lua"))()
 end
       end)
