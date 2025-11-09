@@ -5,7 +5,6 @@ local WALK_SPEED_THRESHOLD = 16
 local originalAnimations = {}
 local walkTrack = nil
 local animationConnections = {}
-local hasFrozen = false
 
 local function restoreOriginalAnimations(character)
     local animateScript = character:FindFirstChild("Animate")
@@ -39,7 +38,6 @@ local function restoreOriginalAnimations(character)
         end
     end
     animationConnections = {}
-    hasFrozen = false
 end
 
 local function applyPossessedAnimations(character)
@@ -76,33 +74,12 @@ local function applyPossessedAnimations(character)
     walkTrack = animator:LoadAnimation(walkAnim)
     walkTrack.Priority = Enum.AnimationPriority.Movement
 
-    -- Reset freeze flag when character stops moving
+    -- Store connections so we can disconnect them later
     animationConnections.running = humanoid.Running:Connect(function(speed)
-        if speed == 0 then
-            hasFrozen = false
-        end
-        
         if speed > 0 and speed <= WALK_SPEED_THRESHOLD then
-            if not walkTrack.IsPlaying then 
-                -- Freeze character only once when starting to walk
-                if not hasFrozen then
-                    local originalSpeed = humanoid.WalkSpeed
-                    humanoid.WalkSpeed = 0
-                    
-                    walkTrack:Play()
-                    
-                    -- Unfreeze quickly
-                    task.wait(0.05)
-                    humanoid.WalkSpeed = originalSpeed
-                    hasFrozen = true
-                else
-                    walkTrack:Play()
-                end
-            end
+            if not walkTrack.IsPlaying then walkTrack:Play() end
         else
-            if walkTrack.IsPlaying then 
-                walkTrack:Stop(0.1) 
-            end
+            if walkTrack.IsPlaying then walkTrack:Stop(0.1) end
         end
     end)
 
