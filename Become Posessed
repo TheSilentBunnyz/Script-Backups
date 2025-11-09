@@ -77,9 +77,21 @@ local function applyPossessedAnimations(character)
     -- Store connections so we can disconnect them later
     animationConnections.running = humanoid.Running:Connect(function(speed)
         if speed > 0 and speed <= WALK_SPEED_THRESHOLD then
-            if not walkTrack.IsPlaying then walkTrack:Play() end
+            if not walkTrack.IsPlaying then 
+                -- Freeze character briefly to reset animation state
+                local originalSpeed = humanoid.WalkSpeed
+                humanoid.WalkSpeed = 0
+                
+                walkTrack:Play()
+                
+                -- Unfreeze quickly
+                task.wait(0.05)
+                humanoid.WalkSpeed = originalSpeed
+            end
         else
-            if walkTrack.IsPlaying then walkTrack:Stop(0.1) end
+            if walkTrack.IsPlaying then 
+                walkTrack:Stop(0.1) 
+            end
         end
     end)
 
