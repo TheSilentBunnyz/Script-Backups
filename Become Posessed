@@ -1,31 +1,81 @@
 local player = game.Players.LocalPlayer
 local WALK_SPEED_THRESHOLD = 16
 
-local function onCharacterAdded(character)
+-- Store original animations and tracks
+local originalAnimations = {}
+local walkTrack = nil
+local animationConnections = {}
+
+local function restoreOriginalAnimations(character)
+    local animateScript = character:FindFirstChild("Animate")
+    if animateScript and originalAnimations.idle1 then
+        local idle = animateScript:FindFirstChild("idle")
+        local walk = animateScript:FindFirstChild("walk")
+        local run = animateScript:FindFirstChild("run")
+        
+        if idle then
+            idle.Animation1.AnimationId = originalAnimations.idle1
+            idle.Animation2.AnimationId = originalAnimations.idle2
+        end
+        if walk then
+            walk.WalkAnim.AnimationId = originalAnimations.walk
+        end
+        if run then
+            run.RunAnim.AnimationId = originalAnimations.run
+        end
+    end
+    
+    -- Stop custom animation tracks
+    if walkTrack then
+        walkTrack:Stop(0.1)
+        walkTrack = nil
+    end
+    
+    -- Disconnect connections
+    for _, connection in pairs(animationConnections) do
+        if connection then
+            connection:Disconnect()
+        end
+    end
+    animationConnections = {}
+end
+
+local function applyPossessedAnimations(character)
     local humanoid = character:WaitForChild("Humanoid")
     if humanoid.RigType ~= Enum.HumanoidRigType.R15 then return end
+    
+    -- Save original animations
+    local animateScript = character:WaitForChild("Animate")
+    originalAnimations = {
+        idle1 = animateScript.idle.Animation1.AnimationId,
+        idle2 = animateScript.idle.Animation2.AnimationId,
+        walk = animateScript.walk.WalkAnim.AnimationId,
+        run = animateScript.run.RunAnim.AnimationId
+    }
     
     local animator = humanoid:WaitForChild("Animator")
     for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
         track:Stop(0.1)
     end
 
-    local animateScript = character:WaitForChild("Animate")
     local idle = animateScript:WaitForChild("idle")
     local walk = animateScript:WaitForChild("walk")
     local run = animateScript:WaitForChild("run")
 
+    -- Apply possessed animations
     idle.Animation1.AnimationId = "http://www.roblox.com/asset/?id=80103653497738"
     idle.Animation2.AnimationId = "http://www.roblox.com/asset/?id=75794256017298"
     walk.WalkAnim.AnimationId = "http://www.roblox.com/asset/?id=88508412373927"
     run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=88508412373927"
 
+    -- Load custom walk animation
     local walkAnim = Instance.new("Animation")
     walkAnim.AnimationId = "rbxassetid://88508412373927"
-    local walkTrack = animator:LoadAnimation(walkAnim)
+    walkTrack = animator:LoadAnimation(walkAnim)
     walkTrack.Priority = Enum.AnimationPriority.Movement
 
-    humanoid.Running:Connect(function(speed)
+    -- Store connections so we can disconnect them later
+    animationConnections.running = humanoid.Running:Connect(function(speed)
         if speed > 0 and speed <= WALK_SPEED_THRESHOLD then
             if not walkTrack.IsPlaying then walkTrack:Play() end
         else
@@ -33,12 +83,23 @@ local function onCharacterAdded(character)
         end
     end)
 
-    humanoid.StateChanged:Connect(function(_, newState)
+    animationConnections.stateChanged = humanoid.StateChanged:Connect(function(_, newState)
         if newState == Enum.HumanoidStateType.Jumping or newState == Enum.HumanoidStateType.Freefall or newState == Enum.HumanoidStateType.Climbing then
             if walkTrack.IsPlaying then walkTrack:Stop(0.1) end
         end
     end)
 end
 
-player.CharacterAdded:Connect(onCharacterAdded)
-if player.Character then onCharacterAdded(player.Character) end
+-- Make these functions global so the toggle can access them
+getgenv().ApplyPossessedAnimations = applyPossessedAnimations
+getgenv().RestoreOriginalAnimations = restoreOriginalAnimations
+
+-- Apply to current character if needed
+if player.Character then 
+    applyPossessedAnimations(player.Character) 
+end
+
+-- Connect to character added
+player.CharacterAdded:Connect(function(character)
+    applyPossessedAnimations(character)
+end)
