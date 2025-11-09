@@ -1,4 +1,3 @@
-
 local player = game.Players.LocalPlayer
 local WALK_SPEED_THRESHOLD = 16
 
