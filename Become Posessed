@@ -1,4 +1,4 @@
-[[
+
 local player = game.Players.LocalPlayer
 local WALK_SPEED_THRESHOLD = 16
 
@@ -43,4 +43,3 @@ end
 
 player.CharacterAdded:Connect(onCharacterAdded)
 if player.Character then onCharacterAdded(player.Character) end
-]]
